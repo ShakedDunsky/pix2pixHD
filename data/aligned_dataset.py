@@ -24,6 +24,11 @@ class AlignedDataset(BaseDataset):
             self.dir_inst = os.path.join(opt.dataroot, opt.phase + '_inst')
             self.inst_paths = sorted(make_dataset(self.dir_inst))
 
+        ### hair masks
+        if opt.read_masks:
+            self.dir_mask = os.path.join(opt.dataroot, opt.phase + '_mask')
+            self.mask_paths = sorted(make_dataset(self.dir_mask))
+
         ### load precomputed instance-wise encoded features
         if opt.load_features:                              
             self.dir_feat = os.path.join(opt.dataroot, opt.phase + '_feat')
@@ -44,7 +49,7 @@ class AlignedDataset(BaseDataset):
             transform_A = get_transform(self.opt, params, method=Image.NEAREST, normalize=False)
             A_tensor = transform_A(A) * 255.0
 
-        B_tensor = inst_tensor = feat_tensor = 0
+        B_tensor = inst_tensor = feat_tensor = mask = 0
         ### input B (real images)
         if self.opt.isTrain or self.opt.use_encoded_image:
             B_path = self.B_paths[index]   
@@ -62,10 +67,15 @@ class AlignedDataset(BaseDataset):
                 feat_path = self.feat_paths[index]            
                 feat = Image.open(feat_path).convert('RGB')
                 norm = normalize()
-                feat_tensor = norm(transform_A(feat))                            
+                feat_tensor = norm(transform_A(feat))
+
+        if self.opt.read_masks:
+            mask_path = self.mask_paths[index]
+            mask = Image.open(mask_path)
+            # mask_tensor = transform_A(mask)
 
         input_dict = {'label': A_tensor, 'inst': inst_tensor, 'image': B_tensor, 
-                      'feat': feat_tensor, 'path': A_path}
+                      'feat': feat_tensor, 'path': A_path, 'mask': mask}
 
         return input_dict
 
