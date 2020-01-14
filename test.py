@@ -5,12 +5,15 @@ from options.test_options import TestOptions
 from data.data_loader import CreateDataLoader
 from models.models import create_model
 import util.util as util
-from util.visualizer import Visualizer
+from util.visualizer import Visualizer, get_out_panel
 from util import html
 import torch
+import ntpath
 
-from hair_recolor import apply_mask
+from hair_recolor import apply_mask, enhance_brightening
 
+
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 opt = TestOptions().parse(save=False)
 opt.nThreads = 1   # test code only supports nThreads = 1
@@ -62,17 +65,25 @@ for i, data in enumerate(dataset):
         generated = model.inference(data['label'], data['inst'], data['image'])
 
     orig_im = util.tensor2label(data['label'][0], opt.label_nc)
-    mask = util.tensor2label(data['label'][0], opt.label_nc)
+    mask = util.tensor2label(data['mask'][0], opt.label_nc)
     synthesized_im = util.tensor2im(generated.data[0])
-    masked_im = apply_mask(orig_im, synthesized_im, data['mask'][0])
+    masked_im = apply_mask(orig_im, synthesized_im, mask)
+    enhanced = enhance_brightening(orig_im, masked_im)
+
+    # plt.figure()
+    # plt.imshow(masked_im)
+    # plt.figure()
+    # plt.imshow(enhanced)
+    # plt.show()
 
     visuals = OrderedDict([('input_label', orig_im),
-                           ('synthesized_image_no_mask', synthesized_im),
-                           ('synthesized_image', masked_im)
+                           ('synthesized_image', synthesized_im),
+                           ('masked_image', masked_im),
+                           ('enhanced', enhanced)
                            ])
     img_path = data['path']
     print('process image... %s' % img_path)
-    # visualizer.save_images(webpage, visuals, img_path)
     visualizer.save_images(webpage, visuals, img_path)
+    # visualizer.save_panel(webpage, [orig_im, masked_im], img_path)
 
 webpage.save()

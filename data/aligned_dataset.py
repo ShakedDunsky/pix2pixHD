@@ -2,6 +2,7 @@ import os.path
 from data.base_dataset import BaseDataset, get_params, get_transform, normalize
 from data.image_folder import make_dataset
 from PIL import Image
+import matplotlib.pyplot as plt
 
 class AlignedDataset(BaseDataset):
     def initialize(self, opt):
@@ -25,7 +26,7 @@ class AlignedDataset(BaseDataset):
             self.inst_paths = sorted(make_dataset(self.dir_inst))
 
         ### hair masks
-        if opt.read_masks:
+        if opt.use_masks:
             self.dir_mask = os.path.join(opt.dataroot, opt.phase + '_mask')
             self.mask_paths = sorted(make_dataset(self.dir_mask))
 
@@ -49,7 +50,7 @@ class AlignedDataset(BaseDataset):
             transform_A = get_transform(self.opt, params, method=Image.NEAREST, normalize=False)
             A_tensor = transform_A(A) * 255.0
 
-        B_tensor = inst_tensor = feat_tensor = mask = 0
+        B_tensor = inst_tensor = feat_tensor = mask_tensor = 0
         ### input B (real images)
         if self.opt.isTrain or self.opt.use_encoded_image:
             B_path = self.B_paths[index]   
@@ -69,13 +70,15 @@ class AlignedDataset(BaseDataset):
                 norm = normalize()
                 feat_tensor = norm(transform_A(feat))
 
-        if self.opt.read_masks:
+        if self.opt.use_masks:
             mask_path = self.mask_paths[index]
             mask = Image.open(mask_path)
-            # mask_tensor = transform_A(mask)
+            rgb_mask = Image.new('RGB', mask.size)
+            rgb_mask.paste(mask)
+            mask_tensor = transform_A(rgb_mask)
 
         input_dict = {'label': A_tensor, 'inst': inst_tensor, 'image': B_tensor, 
-                      'feat': feat_tensor, 'path': A_path, 'mask': mask}
+                      'feat': feat_tensor, 'path': A_path, 'mask': mask_tensor}
 
         return input_dict
 

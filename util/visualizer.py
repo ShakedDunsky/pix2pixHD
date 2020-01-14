@@ -110,7 +110,7 @@ class Visualizer():
             log_file.write('%s\n' % message)
 
     # save image to the disk
-    def save_images(self, webpage, visuals, image_path, image_mask=None):
+    def save_images(self, webpage, visuals, image_path):
         image_dir = webpage.get_image_dir()
         short_path = ntpath.basename(image_path[0])
         name = os.path.splitext(short_path)[0]
@@ -119,17 +119,36 @@ class Visualizer():
         ims = []
         txts = []
         links = []
+        panel = []
 
         for label, image_numpy in visuals.items():
-
-            if image_mask is not None:
-                image_numpy = apply_mask(image_numpy)
 
             image_name = '%s_%s.jpg' % (name, label)
             save_path = os.path.join(image_dir, image_name)
             util.save_image(image_numpy, save_path)
-
             ims.append(image_name)
             txts.append(label)
             links.append(image_name)
+            panel.append(image_numpy)
+
+
+
         webpage.add_images(ims, txts, links, width=self.win_size)
+
+    def save_panel(self, webpage, panel, image_path):
+        image_dir = webpage.get_image_dir()
+        short_path = ntpath.basename(image_path[0])
+        name = os.path.splitext(short_path)[0]
+        image_name = '%s_panel.jpg' % name
+        save_path = os.path.join(image_dir, image_name)
+        p = get_out_panel(panel)
+        util.save_image(p, save_path)
+
+
+def get_out_panel(im_list):
+    for i, im in enumerate(im_list):
+        if len(im.shape) == 2:
+            im_list[i] = np.tile(im[:, :, np.newaxis], (1, 1, 3))
+        if np.max(im_list[i]) <= 1:
+            im_list[i] = np.array(im_list[i] * 255, dtype=np.uint8)
+    return np.concatenate(im_list, axis=1)

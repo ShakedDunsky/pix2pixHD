@@ -15,6 +15,7 @@ def tensor2im(image_tensor, imtype=np.uint8, normalize=True):
         return image_numpy
     image_numpy = image_tensor.cpu().float().numpy()
     if normalize:
+        # print('image_numpy.shape', image_numpy.shape)
         image_numpy = (np.transpose(image_numpy, (1, 2, 0)) + 1) / 2.0 * 255.0
     else:
         image_numpy = np.transpose(image_numpy, (1, 2, 0)) * 255.0      

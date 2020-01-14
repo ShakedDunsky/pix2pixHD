@@ -21,3 +21,6 @@ def list_files_in_dir(root_dir, out_filename, suffix='jpg', recursive=True):
         b_filename = 'dark_brown/' + filename[5]
         out_f.write(a_filename + '\n' + b_filename + '\n')
 
+
+if __name__ == '__main__':
+    print()
