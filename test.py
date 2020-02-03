@@ -9,9 +9,12 @@ from util.visualizer import Visualizer, get_out_panel
 from util import html
 import torch
 import ntpath
+import numpy as np
+import imageio
+from skimage.transform import resize
 
-from hair_recolor import apply_mask, enhance_brightening
 
+from transfer_recolor.recolor import apply_mask, enhance_brightening, recolor_im
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
@@ -40,10 +43,21 @@ if not opt.engine and not opt.onnx:
         print(model)
 else:
     from run_engine import run_trt_engine, run_onnx
-    
+
+dst_im = np.array(imageio.imread('../research-hair/input/reference/blonde.jpg'))
+dst_im_out = resize(dst_im, (1024, 1024))
+
+print('len dataset', len(dataset))
+
 for i, data in enumerate(dataset):
-    if i >= opt.how_many:
-        break
+
+    # panel_path = visualizer.save_panel(webpage, None, data['path'], None, save=False)
+    # if os.path.exists(panel_path):
+    #     continue
+
+    # if i >= opt.how_many:   # shouldn't happen
+    #     break
+
     if opt.data_type == 16:
         data['label'] = data['label'].half()
         data['inst'] = data['inst'].half()
@@ -64,26 +78,32 @@ for i, data in enumerate(dataset):
     else:        
         generated = model.inference(data['label'], data['inst'], data['image'])
 
+    img_path = data['path']
+    print('process image %d... %s' % (i, img_path))
+
     orig_im = util.tensor2label(data['label'][0], opt.label_nc)
     mask = util.tensor2label(data['mask'][0], opt.label_nc)
     synthesized_im = util.tensor2im(generated.data[0])
     masked_im = apply_mask(orig_im, synthesized_im, mask)
     enhanced = enhance_brightening(orig_im, masked_im)
+    enhanced1 = enhance_brightening(orig_im, masked_im, factor=1.75)
+    enhanced2 = enhance_brightening(orig_im, masked_im, factor=2)
 
-    # plt.figure()
-    # plt.imshow(masked_im)
-    # plt.figure()
-    # plt.imshow(enhanced)
-    # plt.show()
+    recolored = recolor_im(orig_im, mask, dst_im)
+    recolored_from_synth = recolor_im(synthesized_im, mask, dst_im)
 
-    visuals = OrderedDict([('input_label', orig_im),
-                           ('synthesized_image', synthesized_im),
-                           ('masked_image', masked_im),
-                           ('enhanced', enhanced)
-                           ])
-    img_path = data['path']
-    print('process image... %s' % img_path)
-    visualizer.save_images(webpage, visuals, img_path)
-    # visualizer.save_panel(webpage, [orig_im, masked_im], img_path)
+    # visuals = OrderedDict([('input_label', orig_im),
+    #                        ('synthesized_image', synthesized_im),
+    #                        ('masked_image', masked_im),
+    #                        ('enhanced', enhanced)
+    #                        ])
 
-webpage.save()
+    # visualizer.save_images(webpage, visuals, img_path)
+
+    visualizer.save_panel(webpage,
+                          [orig_im, synthesized_im, masked_im, enhanced, enhanced1, enhanced2,
+                              recolored, recolored_from_synth, dst_im_out],
+                          img_path,
+                          'panel')
+
+# webpage.save()

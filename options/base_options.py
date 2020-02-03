@@ -21,6 +21,8 @@ class BaseOptions():
         self.parser.add_argument('--fp16', action='store_true', default=False, help='train with AMP')
         self.parser.add_argument('--local_rank', type=int, default=0, help='local rank for distributed training')
 
+        self.parser.add_argument('--how_many', type=int, default=-1, help='how many images to load')
+
         # input/output sizes       
         self.parser.add_argument('--batchSize', type=int, default=1, help='input batch size')
         self.parser.add_argument('--loadSize', type=int, default=1024, help='scale images to this size')

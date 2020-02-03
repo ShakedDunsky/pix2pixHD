@@ -14,12 +14,6 @@ def apply_mask(orig_im, recolored_im, hair_mask):
     return recolored_only_hair
 
 
-def enhance_brightening(orig_im, new_im):
-    # RGB space
-    enhanced = orig_im/255. + 1.5 * (new_im/255. - orig_im/255.)
-    np.clip(enhanced, 0, 1)
-    return (enhanced * 255).astype(np.uint8)
-
 if __name__ == '__main__':
     orig_im = sys.argv[1]
     new_im = sys.argv[2]

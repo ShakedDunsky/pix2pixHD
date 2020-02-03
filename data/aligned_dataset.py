@@ -12,29 +12,29 @@ class AlignedDataset(BaseDataset):
         ### input A (label maps)
         dir_A = '_A' if self.opt.label_nc == 0 else '_label'
         self.dir_A = os.path.join(opt.dataroot, opt.phase + dir_A)
-        self.A_paths = sorted(make_dataset(self.dir_A))
+        self.A_paths = sorted(make_dataset(self.dir_A))[0:opt.how_many]
 
         ### input B (real images)
         if opt.isTrain or opt.use_encoded_image:
             dir_B = '_B' if self.opt.label_nc == 0 else '_img'
             self.dir_B = os.path.join(opt.dataroot, opt.phase + dir_B)  
-            self.B_paths = sorted(make_dataset(self.dir_B))
+            self.B_paths = sorted(make_dataset(self.dir_B))[0:opt.how_many]
 
         ### instance maps
         if not opt.no_instance:
             self.dir_inst = os.path.join(opt.dataroot, opt.phase + '_inst')
-            self.inst_paths = sorted(make_dataset(self.dir_inst))
+            self.inst_paths = sorted(make_dataset(self.dir_inst))[0:opt.how_many]
 
         ### hair masks
         if opt.use_masks:
             self.dir_mask = os.path.join(opt.dataroot, opt.phase + '_mask')
-            self.mask_paths = sorted(make_dataset(self.dir_mask))
+            self.mask_paths = sorted(make_dataset(self.dir_mask))[0:opt.how_many]
 
         ### load precomputed instance-wise encoded features
         if opt.load_features:                              
             self.dir_feat = os.path.join(opt.dataroot, opt.phase + '_feat')
             print('----------- loading features from %s ----------' % self.dir_feat)
-            self.feat_paths = sorted(make_dataset(self.dir_feat))
+            self.feat_paths = sorted(make_dataset(self.dir_feat))[0:opt.how_many]
 
         self.dataset_size = len(self.A_paths) 
       

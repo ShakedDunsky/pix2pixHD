@@ -131,18 +131,19 @@ class Visualizer():
             links.append(image_name)
             panel.append(image_numpy)
 
-
-
         webpage.add_images(ims, txts, links, width=self.win_size)
 
-    def save_panel(self, webpage, panel, image_path):
+    def save_panel(self, webpage, panel, image_path, output_type, save=True):
         image_dir = webpage.get_image_dir()
         short_path = ntpath.basename(image_path[0])
         name = os.path.splitext(short_path)[0]
-        image_name = '%s_panel.jpg' % name
+        image_name = '%s_%s.jpg' % (name, output_type)
         save_path = os.path.join(image_dir, image_name)
-        p = get_out_panel(panel)
-        util.save_image(p, save_path)
+        if save:
+            p = get_out_panel(panel)
+            util.save_image(p, save_path)
+        else:
+            return save_path
 
 
 def get_out_panel(im_list):
